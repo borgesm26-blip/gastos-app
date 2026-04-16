@@ -21,6 +21,7 @@ type Expense = {
 type MonthData = {
   month: string
   year: number
+  monthNum: number
   total: number
   count: number
   expenses: Expense[]
