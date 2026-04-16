@@ -136,13 +136,21 @@ function DashboardPage() {
           </div>
         </div>
 
-        {/* Botón Nuevo Gasto */}
-        <Link
-          href="/nuevo"
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-lg text-center text-lg mb-4 block transition shadow-lg"
-        >
-          ➕ Nuevo Gasto
-        </Link>
+        {/* Botones de acción */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <Link
+            href="/nuevo"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-lg text-center text-lg transition shadow-lg"
+          >
+            ➕ Nuevo Gasto
+          </Link>
+          <Link
+            href="/historico"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg text-center text-lg transition shadow-lg"
+          >
+            📊 Histórico
+          </Link>
+        </div>
 
         {/* Botón Descargar Excel */}
         <div className="mb-8">
