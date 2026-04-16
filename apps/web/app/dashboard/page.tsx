@@ -4,8 +4,19 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { withAuth } from '@/lib/auth-guard'
-import { Expense } from 'types'
+import { downloadExcel } from '@/lib/export'
 import Link from 'next/link'
+
+type Expense = {
+  id: string
+  user_id: string
+  amount: number
+  category: string
+  description?: string
+  owner: 'yo' | 'vos' | 'compartido'
+  created_at: string
+  updated_at: string
+}
 
 function DashboardPage() {
   const router = useRouter()
@@ -119,17 +130,29 @@ function DashboardPage() {
         {/* Botón Nuevo Gasto */}
         <Link
           href="/nuevo"
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-lg text-center text-lg mb-8 block transition shadow-lg"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-lg text-center text-lg mb-4 block transition shadow-lg"
         >
           ➕ Nuevo Gasto
         </Link>
+
+        {/* Botón Descargar Excel */}
+        <div className="mb-8">
+          <button
+            onClick={() => downloadExcel(expenses)}
+            disabled={expenses.length === 0}
+            className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-1 px-3 rounded text-sm transition"
+            title="Descargar como Excel"
+          >
+            📊 Descargar
+          </button>
+        </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <p className="text-gray-600 text-sm font-semibold mb-2">Total Este Mes</p>
             <p className="text-4xl font-bold text-indigo-600">
-              ${monthExpenses.reduce((acc, e) => acc + e.amount, 0).toFixed(2)}
+              ARS ${monthExpenses.reduce((acc, e) => acc + e.amount, 0).toFixed(0)}
             </p>
             <p className="text-gray-500 text-xs mt-2">{monthExpenses.length} gastos</p>
           </div>
@@ -137,7 +160,7 @@ function DashboardPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <p className="text-gray-600 text-sm font-semibold mb-2">Total General</p>
             <p className="text-4xl font-bold text-blue-600">
-              ${totalExpenses.toFixed(2)}
+              ${totalExpenses.toFixed(0)}
             </p>
             <p className="text-gray-500 text-xs mt-2">{expenses.length} gastos</p>
           </div>
@@ -145,7 +168,7 @@ function DashboardPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <p className="text-gray-600 text-sm font-semibold mb-2">Compartido</p>
             <p className="text-4xl font-bold text-green-600">
-              ${(totalByOwner['compartido'] || 0).toFixed(2)}
+              ${(totalByOwner['compartido'] || 0).toFixed(0)}
             </p>
             <p className="text-gray-500 text-xs mt-2">Pozo común</p>
           </div>
@@ -171,7 +194,7 @@ function DashboardPage() {
                         ></div>
                       </div>
                       <span className="text-indigo-600 font-bold min-w-[100px] text-right">
-                        ${total.toFixed(2)}
+                        ${total.toFixed(0)}
                       </span>
                     </div>
                   </div>
@@ -204,9 +227,18 @@ function DashboardPage() {
                       {expense.owner === 'yo' ? 'Yo' : expense.owner === 'vos' ? 'Vos' : 'Compartido'}
                     </p>
                   </div>
-                  <p className="text-xl font-bold text-indigo-600 min-w-[100px] text-right">
-                    ${expense.amount.toFixed(2)}
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <p className="text-xl font-bold text-indigo-600 min-w-[100px] text-right">
+                      ARS ${expense.amount.toFixed(0)}
+                    </p>
+                    <Link
+                      href={`/editar/${expense.id}`}
+                      className="text-indigo-600 hover:text-indigo-800 text-lg"
+                      title="Editar gasto"
+                    >
+                      ✏️
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>
