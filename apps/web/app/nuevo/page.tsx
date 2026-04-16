@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { withAuth } from '@/lib/auth-guard'
 import Link from 'next/link'
+import { OcrModal } from './OcrModal'
 
 const CATEGORIES = [
   'Alquiler',
@@ -26,6 +27,7 @@ function NuevoGastoPage() {
   const [description, setDescription] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showOcrModal, setShowOcrModal] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -80,6 +82,14 @@ function NuevoGastoPage() {
             ✕
           </Link>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setShowOcrModal(true)}
+          className="w-full bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold py-2 rounded-lg mb-6 transition"
+        >
+          📸 Capturar Ticket
+        </button>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Monto */}
@@ -147,6 +157,12 @@ function NuevoGastoPage() {
           </button>
         </form>
       </div>
+
+      <OcrModal
+        isOpen={showOcrModal}
+        onClose={() => setShowOcrModal(false)}
+        onAmountExtracted={(extractedAmount) => setAmount(extractedAmount)}
+      />
     </div>
   )
 }
