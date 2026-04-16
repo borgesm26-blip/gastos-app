@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { withAuth } from '@/lib/auth-guard'
@@ -24,9 +24,20 @@ function NuevoGastoPage() {
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('Alacena')
   const [description, setDescription] = useState('')
-  const [owner, setOwner] = useState<'yo' | 'vos' | 'compartido'>('compartido')
+  const [owner, setOwner] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Get user's full name from auth metadata
+  useEffect(() => {
+    const loadUserName = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user?.user_metadata?.full_name) {
+        setOwner(session.user.user_metadata.full_name)
+      }
+    }
+    loadUserName()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -132,29 +143,6 @@ function NuevoGastoPage() {
               placeholder="ej: Coto, verdulería"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
-          </div>
-
-          {/* Owner */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              ¿De quién?
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {['yo', 'vos', 'compartido'].map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => setOwner(opt as any)}
-                  className={`py-2 px-3 rounded-lg font-semibold transition ${
-                    owner === opt
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  {opt === 'yo' ? 'Yo' : opt === 'vos' ? 'Vos' : 'Compartido'}
-                </button>
-              ))}
-            </div>
           </div>
 
           {error && (
