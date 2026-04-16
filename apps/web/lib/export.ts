@@ -46,8 +46,7 @@ export function exportToMarkdown(expenses: Expense[]) {
   Object.entries(byOwner)
     .sort(([, a], [, b]) => b - a)
     .forEach(([owner, amount]) => {
-      const label = owner === 'yo' ? '🧑 Yo' : owner === 'vos' ? '👤 Vos' : '🏠 Compartido'
-      markdown += `| ${label} | ARS $${amount.toFixed(0)} |\n`
+      markdown += `| ${owner} | ARS $${amount.toFixed(0)} |\n`
     })
 
   // Lista detallada
@@ -55,10 +54,9 @@ export function exportToMarkdown(expenses: Expense[]) {
 
   expenses.forEach((expense) => {
     const date = new Date(expense.created_at).toLocaleDateString('es-AR')
-    const owner = expense.owner === 'yo' ? 'Yo' : expense.owner === 'vos' ? 'Vos' : 'Compartido'
     markdown += `### ${expense.category} - ARS $${expense.amount.toFixed(0)}\n`
     markdown += `- **Fecha:** ${date}\n`
-    markdown += `- **Persona:** ${owner}\n`
+    markdown += `- **Persona:** ${expense.owner}\n`
     if (expense.description) {
       markdown += `- **Descripción:** ${expense.description}\n`
     }
@@ -107,7 +105,7 @@ export async function downloadExcel(expenses: Expense[]) {
   const ownerSummary = Object.entries(byOwner)
     .sort(([, a], [, b]) => b - a)
     .map(([owner, amount]) => ({
-      Persona: owner === 'yo' ? 'Yo' : owner === 'vos' ? 'Vos' : 'Compartido',
+      Persona: owner,
       Monto: amount,
     }))
 
@@ -116,7 +114,7 @@ export async function downloadExcel(expenses: Expense[]) {
     Fecha: new Date(expense.created_at).toLocaleDateString('es-AR'),
     Categoría: expense.category,
     Monto: `ARS $${expense.amount.toFixed(0)}`,
-    Persona: expense.owner === 'yo' ? 'Yo' : expense.owner === 'vos' ? 'Vos' : 'Compartido',
+    Persona: expense.owner,
     Descripción: expense.description || '',
   }))
 

@@ -4,7 +4,7 @@ export type Expense = {
   amount: number
   category: string
   description?: string
-  owner: 'yo' | 'vos' | 'compartido'
+  owner: string  // User's full_name
   created_at: string
   updated_at: string
 }
@@ -13,7 +13,7 @@ export type CreateExpenseInput = {
   amount: number
   category: string
   description?: string
-  owner: 'yo' | 'vos' | 'compartido'
+  owner: string  // User's full_name
 }
 
 export type User = {
