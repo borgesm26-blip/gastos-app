@@ -7,6 +7,7 @@ import Link from 'next/link'
 
 export default function SignupPage() {
   const router = useRouter()
+  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -17,6 +18,11 @@ export default function SignupPage() {
     e.preventDefault()
     setError('')
 
+    if (!fullName.trim()) {
+      setError('Por favor ingresa tu nombre')
+      return
+    }
+
     if (password !== confirmPassword) {
       setError('Las contraseñas no coinciden')
       return
@@ -25,9 +31,14 @@ export default function SignupPage() {
     setLoading(true)
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            full_name: fullName.trim(),
+          },
+        },
       })
 
       if (error) throw error
@@ -48,6 +59,20 @@ export default function SignupPage() {
         </h1>
 
         <form onSubmit={handleSignup} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nombre Completo
+            </label>
+            <input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="tu nombre"
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email
