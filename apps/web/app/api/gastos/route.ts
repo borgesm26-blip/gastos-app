@@ -13,7 +13,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { amount, category, description, owner } = body
+    const { amount, category, description } = body
 
     // Obtener el usuario del header Authorization
     const authHeader = request.headers.get('authorization')
@@ -29,6 +29,9 @@ export async function POST(request: NextRequest) {
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    // Obtener el nombre completo del usuario
+    const owner = user.user_metadata?.full_name || user.email || 'Unknown'
 
     // Insertar el gasto
     const { data, error } = await supabase

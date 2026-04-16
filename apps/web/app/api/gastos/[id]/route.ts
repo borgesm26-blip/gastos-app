@@ -16,7 +16,7 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    const { amount, category, description, owner } = body
+    const { amount, category, description } = body
 
     const authHeader = request.headers.get('authorization')
     if (!authHeader) {
@@ -42,14 +42,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Gasto no encontrado' }, { status: 404 })
     }
 
-    // Actualizar el gasto
+    // Actualizar el gasto (owner no puede ser modificado)
     const { data, error } = await supabase
       .from('expenses')
       .update({
         amount,
         category,
         description,
-        owner,
         updated_at: new Date().toISOString(),
       })
       .eq('id', params.id)
