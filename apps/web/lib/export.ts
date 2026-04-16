@@ -4,7 +4,7 @@ type Expense = {
   amount: number
   category: string
   description?: string
-  owner: 'yo' | 'vos' | 'compartido'
+  owner: string
   created_at: string
   updated_at: string
 }
