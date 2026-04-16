@@ -72,7 +72,7 @@ function HistoricoPage() {
 
         // Convertir a MonthData ordenado por fecha descendente
         const sorted = Object.entries(grouped)
-          .map(([key, expenses]) => {
+          .map(([key, expenses]: [string, Expense[]]) => {
             const [year, month] = key.split('-')
             return {
               month: months[parseInt(month) - 1],
