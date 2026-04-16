@@ -62,7 +62,7 @@ function HistoricoPage() {
         setExpenses(data)
 
         // Agrupar por mes
-        const grouped = data.reduce((acc: Record<string, Expense[]>, expense: Expense) => {
+        const grouped: Record<string, Expense[]> = data.reduce((acc: Record<string, Expense[]>, expense: Expense) => {
           const date = new Date(expense.created_at)
           const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
           if (!acc[key]) acc[key] = []
@@ -72,15 +72,16 @@ function HistoricoPage() {
 
         // Convertir a MonthData ordenado por fecha descendente
         const sorted = Object.entries(grouped)
-          .map(([key, expenses]: [string, Expense[]]) => {
+          .map(([key, expenses]) => {
             const [year, month] = key.split('-')
+            const expensesList = expenses as Expense[]
             return {
               month: months[parseInt(month) - 1],
               year: parseInt(year),
               monthNum: parseInt(month),
-              total: expenses.reduce((sum, e) => sum + e.amount, 0),
-              count: expenses.length,
-              expenses,
+              total: expensesList.reduce((sum, e) => sum + e.amount, 0),
+              count: expensesList.length,
+              expenses: expensesList,
             }
           })
           .sort((a, b) => {
