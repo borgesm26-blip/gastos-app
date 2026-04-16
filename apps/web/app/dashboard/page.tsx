@@ -117,14 +117,23 @@ function DashboardPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold text-gray-800">💰 Gastos</h1>
-            <p className="text-gray-600 text-sm mt-1">{user?.email}</p>
+            <p className="text-gray-600 text-sm mt-1">{user?.user_metadata?.full_name || user?.email}</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg transition"
-          >
-            Salir
-          </button>
+          <div className="flex gap-2">
+            <Link
+              href="/perfil"
+              className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-semibold py-2 px-4 rounded-lg transition"
+              title="Editar perfil"
+            >
+              ⚙️
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg transition"
+            >
+              Salir
+            </button>
+          </div>
         </div>
 
         {/* Botón Nuevo Gasto */}
@@ -166,11 +175,11 @@ function DashboardPage() {
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-600 text-sm font-semibold mb-2">Compartido</p>
+            <p className="text-gray-600 text-sm font-semibold mb-2">Tus Gastos</p>
             <p className="text-4xl font-bold text-green-600">
-              ${(totalByOwner['compartido'] || 0).toFixed(0)}
+              ${(totalByOwner[user?.user_metadata?.full_name] || 0).toFixed(0)}
             </p>
-            <p className="text-gray-500 text-xs mt-2">Pozo común</p>
+            <p className="text-gray-500 text-xs mt-2">{expenses.filter(e => e.owner === user?.user_metadata?.full_name).length} gastos</p>
           </div>
         </div>
 
@@ -223,8 +232,7 @@ function DashboardPage() {
                       <p className="text-sm text-gray-600">{expense.description}</p>
                     )}
                     <p className="text-xs text-gray-500">
-                      {new Date(expense.created_at).toLocaleDateString('es-AR')} •{' '}
-                      {expense.owner === 'yo' ? 'Yo' : expense.owner === 'vos' ? 'Vos' : 'Compartido'}
+                      {new Date(expense.created_at).toLocaleDateString('es-AR')} • {expense.owner}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
