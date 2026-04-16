@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { withAuth } from '@/lib/auth-guard'
@@ -24,20 +24,8 @@ function NuevoGastoPage() {
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('Alacena')
   const [description, setDescription] = useState('')
-  const [owner, setOwner] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-
-  // Get user's full name from auth metadata
-  useEffect(() => {
-    const loadUserName = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user?.user_metadata?.full_name) {
-        setOwner(session.user.user_metadata.full_name)
-      }
-    }
-    loadUserName()
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,7 +56,6 @@ function NuevoGastoPage() {
           amount: parseInt(amount),
           category,
           description,
-          owner,
         }),
       })
 

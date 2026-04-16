@@ -97,7 +97,6 @@ function EditarGastoPage() {
           amount: parseInt(amount),
           category,
           description,
-          owner,
         }),
       })
 
