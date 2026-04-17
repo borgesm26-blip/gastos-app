@@ -74,7 +74,7 @@ export function OcrModal({ isOpen, onClose, onAmountExtracted }: OcrModalProps) 
           // Evitar líneas con solo números pequeños (fechas, cantidades)
           if (!lineUpper.includes('CANTIDAD') && !lineUpper.includes('PRECIO') && !lineUpper.includes('ITEM')) {
             const numbers = line.match(/\d+[\.,]\d{2}/g) || []
-            if (numbers.length > 0) {
+            if (numbers && numbers.length > 0 && numbers[0]) {
               const amount = parseFloat(numbers[0].replace(',', '.'))
               if (amount > 50 && amount < 1000000) { // El total debe ser > 50
                 totalAmount = amount
