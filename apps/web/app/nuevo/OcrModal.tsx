@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react'
 interface OcrModalProps {
   isOpen: boolean
   onClose: () => void
-  onAmountExtracted: (amount: string) => void
+  onAmountExtracted: (amount: string, storeName?: string) => void
 }
 
 export function OcrModal({ isOpen, onClose, onAmountExtracted }: OcrModalProps) {
@@ -25,32 +25,57 @@ export function OcrModal({ isOpen, onClose, onAmountExtracted }: OcrModalProps) 
 
       // Procesar imagen con OCR
       const result = await Tesseract.recognize(imageData, 'spa')
-      const text = result.data.text
+      const text = result.data.text.toUpperCase()
 
       console.log('OCR Text:', text)
 
-      // Buscar números en el texto
-      const numbers = text.match(/\d+[\.,]\d{2}|\d+/g) || []
+      // Buscar línea con "TOTAL" o "A PAGAR"
+      const lines = text.split('\n')
+      let totalAmount = null
+      let storeName = ''
 
-      if (numbers.length === 0) {
-        setError('No se encontraron números en la imagen')
-        return
+      // Buscar el total
+      for (const line of lines) {
+        if ((line.includes('TOTAL') || line.includes('A PAGAR') || line.includes('MONTO')) && !line.includes('VUELTO')) {
+          // Extraer número de la línea
+          const numbers = line.match(/\d+[\.,]\d{2}|\d+(?:\.\d+)?/g) || []
+          if (numbers.length > 0) {
+            // Tomar el último número de la línea (usualmente el total)
+            const lastNumber = numbers[numbers.length - 1]
+            totalAmount = parseFloat(lastNumber.replace(',', '.'))
+            break
+          }
+        }
       }
 
-      // Buscar el monto (usualmente el número más grande)
-      const amounts = numbers.map(n => {
-        const cleaned = n.replace(',', '.')
-        return parseFloat(cleaned)
-      })
+      // Si no encontró con "TOTAL", buscar el número más grande
+      if (!totalAmount) {
+        const allNumbers = text.match(/\d+[\.,]\d{2}|\d+(?:\.\d+)?/g) || []
+        if (allNumbers.length > 0) {
+          const amounts = allNumbers.map(n => parseFloat(n.replace(',', '.')))
+          // Filtrar números muy grandes (probables códigos de barras)
+          const validAmounts = amounts.filter(a => a < 100000)
+          if (validAmounts.length > 0) {
+            totalAmount = Math.max(...validAmounts)
+          }
+        }
+      }
 
-      // Tomar el número más grande (usualmente el total)
-      const maxAmount = Math.max(...amounts)
+      // Buscar nombre del establecimiento (primeras líneas, antes de números)
+      for (const line of lines.slice(0, 5)) {
+        const cleanLine = line.trim()
+        // Saltar líneas que son solo números, direcciones o fechas
+        if (cleanLine && !cleanLine.match(/^\d/) && cleanLine.length > 3) {
+          storeName = cleanLine
+          break
+        }
+      }
 
-      if (maxAmount > 0) {
-        onAmountExtracted(maxAmount.toString())
+      if (totalAmount && totalAmount > 0) {
+        onAmountExtracted(totalAmount.toString(), storeName || undefined)
         handleClose()
       } else {
-        setError('No se pudo extraer un monto válido')
+        setError('No se pudo extraer el total. Intenta con una foto más clara.')
       }
     } catch (err: any) {
       console.error('Error en OCR:', err)

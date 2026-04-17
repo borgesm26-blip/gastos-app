@@ -161,7 +161,12 @@ function NuevoGastoPage() {
       <OcrModal
         isOpen={showOcrModal}
         onClose={() => setShowOcrModal(false)}
-        onAmountExtracted={(extractedAmount) => setAmount(extractedAmount)}
+        onAmountExtracted={(extractedAmount, storeName) => {
+          setAmount(extractedAmount)
+          if (storeName && !description) {
+            setDescription(storeName)
+          }
+        }}
       />
     </div>
   )
