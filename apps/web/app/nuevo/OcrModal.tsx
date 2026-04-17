@@ -25,61 +25,98 @@ export function OcrModal({ isOpen, onClose, onAmountExtracted }: OcrModalProps) 
 
       // Procesar imagen con OCR
       const result = await Tesseract.recognize(imageData, 'spa')
-      const text = result.data.text.toUpperCase()
+      const text = result.data.text
+      const textUpper = text.toUpperCase()
 
-      console.log('OCR Text:', text)
+      console.log('OCR Raw Text:', text)
 
-      // Buscar línea con "TOTAL" o "A PAGAR"
-      const lines = text.split('\n')
+      const lines = text.split('\n').filter(l => l.trim())
       let totalAmount = null
       let storeName = ''
 
-      // Buscar el total
-      for (const line of lines) {
-        if ((line.includes('TOTAL') || line.includes('A PAGAR') || line.includes('MONTO')) && !line.includes('VUELTO')) {
-          // Extraer número de la línea
-          const numbers = line.match(/\d+[\.,]\d{2}|\d+(?:\.\d+)?/g) || []
+      // Estrategia 1: Buscar línea con TOTAL y extraer número más cercano
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].toUpperCase()
+        if (
+          (line.includes('TOTAL') ||
+           line.includes('A PAGAR') ||
+           line.includes('IMPORTE TOTAL') ||
+           line.includes('MONTO FINAL')) &&
+          !line.includes('VUELTO') &&
+          !line.includes('ANTERIOR')
+        ) {
+          // Buscar número en esta línea o la siguiente
+          let searchText = lines[i] + ' ' + (lines[i + 1] || '')
+          const numbers = searchText.match(/\$?\s*(\d+[\.,]\d{2}|\d+)/g) || []
+
           if (numbers.length > 0) {
-            // Tomar el último número de la línea (usualmente el total)
-            const lastNumber = numbers[numbers.length - 1]
-            totalAmount = parseFloat(lastNumber.replace(',', '.'))
-            break
+            // Tomar el primer número después del $
+            for (const num of numbers) {
+              const cleaned = num.replace(/\$/g, '').trim().replace(',', '.')
+              const amount = parseFloat(cleaned)
+              if (amount > 0 && amount < 1000000) {
+                totalAmount = amount
+                break
+              }
+            }
+            if (totalAmount) break
           }
         }
       }
 
-      // Si no encontró con "TOTAL", buscar el número más grande
+      // Estrategia 2: Si no encontró, buscar en últimas líneas (donde suele estar el total)
       if (!totalAmount) {
-        const allNumbers = text.match(/\d+[\.,]\d{2}|\d+(?:\.\d+)?/g) || []
-        if (allNumbers.length > 0) {
-          const amounts = allNumbers.map(n => parseFloat(n.replace(',', '.')))
-          // Filtrar números muy grandes (probables códigos de barras)
-          const validAmounts = amounts.filter(a => a < 100000)
-          if (validAmounts.length > 0) {
-            totalAmount = Math.max(...validAmounts)
+        const lastLines = lines.slice(Math.max(0, lines.length - 8))
+        for (let i = lastLines.length - 1; i >= 0; i--) {
+          const line = lastLines[i]
+          const lineUpper = line.toUpperCase()
+
+          // Evitar líneas con solo números pequeños (fechas, cantidades)
+          if (!lineUpper.includes('CANTIDAD') && !lineUpper.includes('PRECIO') && !lineUpper.includes('ITEM')) {
+            const numbers = line.match(/\d+[\.,]\d{2}/g) || []
+            if (numbers.length > 0) {
+              const amount = parseFloat(numbers[0].replace(',', '.'))
+              if (amount > 50 && amount < 1000000) { // El total debe ser > 50
+                totalAmount = amount
+                break
+              }
+            }
           }
         }
       }
 
-      // Buscar nombre del establecimiento (primeras líneas, antes de números)
-      for (const line of lines.slice(0, 5)) {
-        const cleanLine = line.trim()
-        // Saltar líneas que son solo números, direcciones o fechas
-        if (cleanLine && !cleanLine.match(/^\d/) && cleanLine.length > 3) {
-          storeName = cleanLine
+      // Estrategia 3: Fallback - buscar el número más grande (>50) en todo el documento
+      if (!totalAmount) {
+        const allNumbers = textUpper.match(/\d+[\.,]\d{2}/g) || []
+        if (allNumbers.length > 0) {
+          const amounts = allNumbers
+            .map(n => parseFloat(n.replace(',', '.')))
+            .filter(a => a > 50 && a < 1000000)
+          if (amounts.length > 0) {
+            totalAmount = Math.max(...amounts)
+          }
+        }
+      }
+
+      // Buscar nombre del establecimiento (primeras 4 líneas, más de 3 caracteres)
+      for (let i = 0; i < Math.min(4, lines.length); i++) {
+        const line = lines[i].trim()
+        if (line && line.length > 3 && !line.match(/^\d{1,2}\//) && !line.match(/^\d+$/)) {
+          storeName = line
           break
         }
       }
 
       if (totalAmount && totalAmount > 0) {
+        console.log('Extracted - Amount:', totalAmount, 'Store:', storeName)
         onAmountExtracted(totalAmount.toString(), storeName || undefined)
         handleClose()
       } else {
-        setError('No se pudo extraer el total. Intenta con una foto más clara.')
+        setError('No se pudo extraer el total. Intenta:\n• Foto más clara\n• Que se vea completo el ticket\n• O ingresa manualmente')
       }
     } catch (err: any) {
       console.error('Error en OCR:', err)
-      setError('Error al procesar la imagen: ' + err.message)
+      setError('Error al procesar: ' + err.message)
     } finally {
       setLoading(false)
     }
